@@ -1,0 +1,3 @@
+# Pour utiliser la vérification d'intégrité :
+# python shieldcli/integrity/file_monitor.py
+# (déplacer file_monitor.py ici si ce n'est pas déjà fait)

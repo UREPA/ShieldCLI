@@ -1,0 +1,11 @@
+# ShieldCLI Project Structure
+
+- shieldcli/
+    - integrity/ : Vérification d'intégrité des fichiers
+    - logs/      : Analyse et surveillance des logs (à venir)
+    - compliance/: Vérification de conformité (à venir)
+    - main.py    : Point d'entrée principal du projet
+- monitor_config.json, checksums.json : Fichiers de configuration à la racine
+- requirements.txt, .gitignore        : À la racine
+
+Déplacez les modules dans les bons dossiers pour garder une structure claire et évolutive.

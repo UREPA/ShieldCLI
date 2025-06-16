@@ -1,0 +1,2 @@
+# Pour la future vérification de logs :
+# Les scripts d'analyse de logs seront placés ici.

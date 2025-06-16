@@ -34,5 +34,15 @@ python file_monitor.py
 - Ajout de la vérification de conformité
 - Améliorations de l'interface CLI
 
+## Organisation du projet
+- Pour la vérification d'intégrité, déplacer file_monitor.py dans shieldcli/integrity/
+- Pour lancer le projet :
+  python shieldcli/main.py
+- Pour lancer la vérification d'intégrité seule :
+  python shieldcli/integrity/file_monitor.py
+- Les modules logs/ et compliance/ accueilleront les futures fonctionnalités.
+- Les fichiers de config (monitor_config.json, checksums.json) restent à la racine ou dans un dossier config/ si besoin.
+- requirements.txt et .gitignore restent à la racine.
+
 ## Auteur
 Projet pédagogique ISRC - Ingénieur systèmes réseau cybersécurité

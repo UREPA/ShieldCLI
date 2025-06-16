@@ -1,3 +1,11 @@
+# Module de vérification d'intégrité des fichiers pour ShieldCLI
+# Déplacé dans shieldcli/integrity/
+
+# Ce script doit être déplacé dans shieldcli/integrity/ pour respecter l'organisation du projet.
+# Après déplacement, lancez-le avec :
+#   python shieldcli/integrity/file_monitor.py
+# Les fichiers de config doivent rester accessibles à la racine ou être référencés correctement.
+
 import time
 import json
 import os
@@ -46,8 +54,10 @@ def save_checksums(checksum_path, checksums):
         print(f"Erreur lors de la sauvegarde des checksums: {e}")
 
 if __name__ == "__main__":
-    config_path = os.path.join(os.path.dirname(__file__), "monitor_config.json")
-    checksum_path = os.path.join(os.path.dirname(__file__), "checksums.json")
+    # Les fichiers de config sont à la racine du projet
+    racine = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    config_path = os.path.join(racine, "monitor_config.json")
+    checksum_path = os.path.join(racine, "checksums.json")
 
     if not os.path.exists(config_path):
         print(f"Fichier de configuration introuvable: {config_path}")

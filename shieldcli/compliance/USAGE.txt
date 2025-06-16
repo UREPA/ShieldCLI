@@ -1,0 +1,2 @@
+# Pour la future vérification de compliance :
+# Les scripts de contrôle de conformité seront placés ici.

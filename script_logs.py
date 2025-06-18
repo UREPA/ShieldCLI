@@ -1,85 +1,121 @@
 import json
-import csv
-from datetime import datetime
-import re
 import os
+import csv
+import datetime
+import re
+import platform
 
+try:
+    import win32evtlog
+except ImportError:
+    win32evtlog = None
 
 def load_config(path='config.json'):
-    with open(path) as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
+def parse_iso(dt_str):
+    return datetime.datetime.fromisoformat(dt_str) if dt_str else None
 
-def parse_line_date(line):
-    # Extrait date d'une ligne de log au format 'Mmm dd HH:MM:SS'
+def filter_line(line, since, until, keywords):
     try:
-        # Exemple syslog: 'Jun 17 14:33:01 hostname service: message'
         parts = line.split()
-        mon = parts[0]
-        day = parts[1]
-        time_str = parts[2]
-        year = datetime.now().year
-        dt = datetime.strptime(f"{mon} {day} {year} {time_str}", "%b %d %Y %H:%M:%S")
-        return dt
+        dt = datetime.datetime.strptime(
+            f"{parts[0]} {parts[1]} {datetime.datetime.now().year} {parts[2]}",
+            "%b %d %Y %H:%M:%S"
+        )
     except Exception:
-        return None
-
-
-def filter_line(line, cfg):
-    dt = parse_line_date(line)
+        dt = None
     if dt:
-        if cfg['filters'].get('since'):
-            since = datetime.fromisoformat(cfg['filters']['since'])
-            if dt < since:
-                return False
-        if cfg['filters'].get('until'):
-            until = datetime.fromisoformat(cfg['filters']['until'])
-            if dt > until:
-                return False
-    # mots clés
-    if cfg['filters'].get('keywords'):
-        if not any(re.search(kw, line, re.IGNORECASE) for kw in cfg['filters']['keywords']):
+        if since and dt < since:
             return False
+        if until and dt > until:
+            return False
+    if keywords and not any(re.search(kw, line, re.IGNORECASE) for kw in keywords):
+        return False
     return True
 
-
-def collect_logs(cfg):
-    collected = []
+# Logs Linux
+def fetch_linux(cfg):
+    since = parse_iso(cfg['filters'].get('since', ''))
+    until = parse_iso(cfg['filters'].get('until', ''))
+    keywords = cfg['filters'].get('keywords', [])
+    data = []
     for path in cfg['logs']:
         if not os.path.isfile(path):
             print(f"Fichier introuvable: {path}")
             continue
         with open(path, 'r', errors='ignore') as f:
             for line in f:
-                if filter_line(line, cfg):
-                    collected.append({'file': os.path.basename(path), 'line': line.rstrip()})
-    return collected
+                if filter_line(line, since, until, keywords):
+                    data.append({'file': os.path.basename(path), 'line': line.strip()})
+    return data
 
+# Logs Windows
+def fetch_windows(cfg):
+    if not win32evtlog:
+        raise RuntimeError("pywin32 non installé ou script exécuté sous Linux")
+    server = cfg.get('server', None)
+    since = parse_iso(cfg['filters'].get('since', ''))
+    until = parse_iso(cfg['filters'].get('until', ''))
+    keywords = cfg['filters'].get('keywords', [])
+    data = []
+    flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+    for log in cfg['logs']:
+        handle = win32evtlog.OpenEventLog(server, log)
+        while True:
+            recs = win32evtlog.ReadEventLog(handle, flags, 0)
+            if not recs:
+                break
+            for ev in recs:
+                t = ev.TimeGenerated
+                if since and t < since:
+                    win32evtlog.CloseEventLog(handle)
+                    return data
+                if until and t > until:
+                    continue
+                msg = win32evtlog.FormatMessage(ev)
+                if keywords and not any(kw.lower() in msg.lower() for kw in keywords):
+                    continue
+                data.append({
+                    'log': log,
+                    'time': t.isoformat(sep=' '),
+                    'source': ev.SourceName,
+                    'event_id': ev.EventID & 0xFFFF,
+                    'message': msg.replace('\r\n',' ')
+                })
+        win32evtlog.CloseEventLog(handle)
+    return data
 
-def save_txt(data, filename):
-    with open(filename + '.txt', 'w') as f:
-        for entry in data:
-            f.write(f"[{entry['file']}] {entry['line']}\n")
-
-
-def save_csv(data, filename):
-    with open(filename + '.csv', 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['file', 'line'])
-        writer.writeheader()
-        for entry in data:
-            writer.writerow(entry)
-
-
-def main():
-    cfg = load_config()
-    data = collect_logs(cfg)
-    out = cfg['output']
-    if out['format'] == 'txt':
-        save_txt(data, out['file'])
+# Sauvegarde TXT ou CSV
+def save(data, outcfg):
+    if not data:
+        print("Aucune entrée collectée.")
+        return
+    fmt = outcfg['format']
+    base = outcfg['file']
+    if fmt == 'txt':
+        with open(base + '.txt', 'w', encoding='utf-8') as f:
+            for entry in data:
+                f.write(str(entry) + '\n')
     else:
-        save_csv(data, out['file'])
-    print(f"{len(data)} lignes de log collectées dans {out['file']}.{out['format']}")
-
+        with open(base + '.csv', 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=list(data[0].keys()))
+            writer.writeheader()
+            writer.writerows(data)
+    print(f"{len(data)} entrées enregistrées dans {base}.{fmt}")
 
 if __name__ == '__main__':
-    main()
+    cfg = load_config()
+    current_os = platform.system().lower()
+    if current_os == 'windows':
+        data = fetch_windows(cfg['windows'])
+        outcfg = cfg['windows']['output']
+    elif current_os == 'linux':
+        data = fetch_linux(cfg['linux'])
+        outcfg = cfg['linux']['output']
+    else:
+        print(f"OS non supporté: {current_os}")
+        exit(1)
+    save(data, outcfg)
+

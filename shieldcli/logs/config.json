@@ -1,0 +1,36 @@
+{
+  "linux": {
+    "logs": [
+      "/var/log/syslog",
+      "/var/log/auth.log",
+      "/var/log/kern.log"
+    ],
+    "filters": {
+      "since": "2025-06-01T00:00:00",
+      "until": "2025-06-17T23:59:59",
+      "keywords": ["error", "fail"]
+    },
+    "output": {
+      "format": "csv",
+      "file": "linux_logs"
+    }
+  },
+
+  "windows": {
+    "server": null,
+    "logs": [
+      "Application",
+      "System",
+      "Security"
+    ],
+    "filters": {
+      "since": "2025-06-01T00:00:00",
+      "until": "2025-06-17T23:59:59",
+      "keywords": ["error", "failed"]
+    },
+    "output": {
+      "format": "csv",
+      "file": "windows_logs"
+    }
+  }
+}

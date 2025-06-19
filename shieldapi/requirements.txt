@@ -1,5 +1,0 @@
-flask
-fastapi
-uvicorn
-sqlalchemy
-python-jose

@@ -1,45 +1,46 @@
 import csv
 import socket
-from scapy.all import ARP, Ether, srp
-from manuf import manuf 
+from scapy.all import get_if_addr, get_if_hwaddr
+from manuf import manuf
 
-def scan(ip_range):
-    pkt = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=ip_range)
-    
-    result = srp(pkt, timeout=2, verbose=0)[0]
+# Récupère l'adresse IP locale en utilisant l'interface par défaut
+def get_local_ip():
+    return get_if_addr("eth0")  # ou remplace "eth0" par ton interface, ou utilise scapy.conf.iface
 
+# Récupère l'adresse MAC de la même interface
+def get_local_mac():
+    return get_if_hwaddr("eth0")  # idem pour l'interface
+
+# Fonction principale : collecte les infos de la machine locale
+def scan_local_scapy():
+    ip = get_local_ip()
+    mac = get_local_mac()
+
+    # Nom d'hôte via DNS inverse
+    try:
+        hostname = socket.gethostbyaddr(ip)[0]
+    except socket.herror:
+        hostname = socket.gethostname()
+
+    # Type d'appareil/fabricant via OUI
     parser = manuf.MacParser()
-    actifs = []
+    device_type = parser.get_manuf(mac) or "Inconnu"
 
-    for _, received in result:
-        ip = received.psrc       
-        mac = received.hwsrc     
+    return [{
+        'ip': ip,
+        'mac': mac,
+        'hostname': hostname,
+        'device_type': device_type
+    }]
 
-        try:
-            hostname = socket.gethostbyaddr(ip)[0]
-        except socket.herror:
-            hostname = "Inconnu"
-
-        device_type = parser.get_manuf(mac) or "Inconnu"
-
-        actifs.append({
-            'ip': ip,
-            'mac': mac,
-            'hostname': hostname,
-            'device_type': device_type
-        })
-
-    return actifs
-
-def save_to_csv(data, filename="actifs.csv"):
-    with open(filename, mode='w', newline='') as file:
-   
-        writer = csv.DictWriter(file, fieldnames=["ip", "mac", "hostname", "device_type"])
-        writer.writeheader()       
-        writer.writerows(data)     
+# Sauvegarde dans CSV
+def save_to_csv(data, filename="local_actifs.csv"):
+    with open(filename, mode='w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=["ip", "mac", "hostname", "device_type"])
+        writer.writeheader()
+        writer.writerows(data)
 
 if __name__ == "__main__":
-    ip_range = "192.168.109.0/24"     
-    actifs = scan(ip_range)         
-    save_to_csv(actifs)             
-    print(f"{len(actifs)} appareils détectés et enregistrés dans 'actifs.csv'")
+    data = scan_local_scapy()
+    save_to_csv(data)
+    print(f"{len(data)} entrée(s) locale(s) enregistrée(s) dans 'local_actifs.csv'")

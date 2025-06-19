@@ -1,1 +1,8 @@
 watchdog
+fastapi
+uvicorn
+requests
+sqlalchemy
+pydantic
+python-jose
+PyJWT

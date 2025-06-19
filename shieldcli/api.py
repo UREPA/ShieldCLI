@@ -56,13 +56,13 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except PyJWTError:
         raise HTTPException(status_code=403, detail="Invalid token or expired")
 
-@app.get("/compliance-audit")
-def get_audit_script(token_sub: str = Depends(verify_token)):
-    try:
-        with open("./compliance/compliance_audit.py", "r") as f:
-            return {"script": f.read()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Script not found or error")
+# @app.get("/compliance-audit")
+# def get_audit_script(token_sub: str = Depends(verify_token)):
+#     try:
+#         with open("./compliance/compliance_audit.py", "r") as f:
+#             return {"script": f.read()}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail="Script not found or error")
 
 @app.post("/report")
 def receive_report(report: Report, agent_id: str = Depends(verify_token)):

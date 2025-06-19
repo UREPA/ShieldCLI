@@ -24,6 +24,7 @@ class ReportDB(Base):
     agent_id = Column(String, index=True)
     timestamp = Column(DateTime)
     audit = Column(Text)  # stocké en JSON string
+    integrity_alerts = Column(Text)  # stocké en JSON string
 
 DATABASE_URL = "sqlite:///./reports.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -34,6 +35,7 @@ Base.metadata.create_all(bind=engine)
 class Report(BaseModel):
     timestamp: str
     audit: Dict[str, Any]
+    integrity_alerts: Any
 
 @app.post("/login")
 def login(data: Dict[str, str] = Body(...)):
@@ -71,6 +73,7 @@ def receive_report(report: Report, agent_id: str = Depends(verify_token)):
         agent_id=agent_id,
         timestamp=datetime.fromisoformat(report.timestamp),
         audit=json.dumps(report.audit),
+        integrity_alerts=json.dumps(report.integrity_alerts),
     )
     db.add(report_db)
     db.commit()
@@ -87,7 +90,8 @@ def dashboard(agent_id: str, token_sub: str = Depends(verify_token)):
     for r in reports_db:
         result.append({
             "timestamp": r.timestamp.isoformat(),
-            "audit": json.loads(r.audit)
+            "audit": json.loads(r.audit),
+            "integrity_alerts": json.loads(r.integrity_alerts) if r.integrity_alerts else None
         })
     db.close()
     return result

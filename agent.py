@@ -5,6 +5,7 @@ import requests
 import uuid
 
 from shieldcli.compliance.compliance_audit import audit_checks
+from shieldcli.integrity.file_monitor import compute_checksum, load_checksums, save_checksums, get_permissions, run_integrity_check
 
 # def get_agent_storage_dir():
 #     system = platform.system()
@@ -22,8 +23,8 @@ from shieldcli.compliance.compliance_audit import audit_checks
 
 AGENT_ID_FILE = "agent_id.txt"
 
-API_URL = "http://192.168.126.1:8000/report"
-LOGIN_URL = "http://192.168.126.1:8000/login"
+API_URL = "http://172.31.224.1:8000/report"
+LOGIN_URL = "http://172.31.224.1:8000/login"
 
 HEADERS = {
     "Content-Type": "application/json"
@@ -82,7 +83,8 @@ def send_report():
 
     data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "audit": audit_checks()
+        "audit": audit_checks(),
+        "integrity_alerts": run_integrity_check()
     }
 
     try:

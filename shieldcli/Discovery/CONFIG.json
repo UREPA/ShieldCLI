@@ -1,0 +1,13 @@
+{
+  "engine": 1,      // 1: nmap, 2: scapy
+  "ip_range": "192.168.109.0/24",
+
+  "scapy": {
+    "timeout": 2,
+    "verbose": 0
+  },
+
+  "nmap": {
+    "arguments": "-sS -O -p 22,80,443 --osscan-guess"
+  }
+}

@@ -1,10 +1,27 @@
 from datetime import datetime, timezone
 import os
+import platform
 import requests
 import uuid
 
-# Configuration
-AGENT_ID_FILE = "/opt/ShieldCLI/agent_id.txt"
+from shieldcli.compliance.compliance_audit import audit_checks
+
+# def get_agent_storage_dir():
+#     system = platform.system()
+#
+#     if system == "Windows":
+#         base = os.getenv("APPDATA") or os.path.expanduser("~\\AppData\\Roaming")
+#         return os.path.join(base, "ShieldCLI")
+#     else:
+#         return "/opt/ShieldCLI"
+#
+# # Configuration
+# AGENT_ID_FILE = os.path.join(get_agent_storage_dir(), "agent_id.txt")
+# # Créer le dossier si nécessaire
+# os.makedirs(os.path.dirname(AGENT_ID_FILE), exist_ok=True)
+
+AGENT_ID_FILE = "agent_id.txt"
+
 API_URL = "http://192.168.126.1:8000/report"
 LOGIN_URL = "http://192.168.126.1:8000/login"
 
@@ -33,18 +50,18 @@ def get_jwt_token(agent_id):
         print("Erreur login:", e)
         return None
 
-def get_remote_audit_module(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    try:
-        r = requests.get("http://192.168.126.1:8000/compliance-audit", headers=headers)
-        r.raise_for_status()
-        script_code = r.json().get("script", "")
-        exec_globals = {}
-        exec(script_code, exec_globals)
-        return exec_globals["audit_checks"]
-    except Exception as e:
-        print("Erreur récupération script distant:", e)
-        return None
+# def get_remote_audit_module(token):
+#     headers = {"Authorization": f"Bearer {token}"}
+#     try:
+#         r = requests.get("http://192.168.126.1:8000/compliance-audit", headers=headers)
+#         r.raise_for_status()
+#         script_code = r.json().get("script", "")
+#         exec_globals = {}
+#         exec(script_code, exec_globals)
+#         return exec_globals["audit_checks"]
+#     except Exception as e:
+#         print("Erreur récupération script distant:", e)
+#         return None
 
 # Envoi vers API
 def send_report():
@@ -58,14 +75,14 @@ def send_report():
     # Mettre à jour le header Authorization avec le token JWT
     HEADERS["Authorization"] = f"Bearer {token}"
 
-    audit_func = get_remote_audit_module(token)
-    if not audit_func:
-        print("Impossible de charger le module d'audit")
-        return
+    # audit_func = get_remote_audit_module(token)
+    # if not audit_func:
+    #     print("Impossible de charger le module d'audit")
+    #     return
 
     data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "audit": audit_func()
+        "audit": audit_checks()
     }
 
     try:

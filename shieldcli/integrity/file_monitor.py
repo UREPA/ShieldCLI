@@ -10,7 +10,6 @@ import time
 import json
 import os
 import hashlib
-import stat
 
 def compute_checksum(file_path):
     """

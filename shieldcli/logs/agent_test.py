@@ -89,7 +89,9 @@ def send_report():
         "audit": audit_checks(),
         "integrity_alerts": run_integrity_check(),
         "scan_nmap": scan_local(),
-        "scan_scapy": 
+        "scan_scapy": scan_local_scapy(),
+        "logs_linux": fetch_linux(),
+        "logs_windows": fetch_windows()
     }
 
     try:

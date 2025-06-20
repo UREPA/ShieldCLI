@@ -64,4 +64,4 @@ python shieldcli/integrity/file_monitor.py
 - `requirements.txt`, `Dockerfile`, `docker-compose.yml` : à la racine
 
 ## Auteur
-Groupe 1 - ISRC 
+Groupe 1 - ISRC - Joris BERNARDI | Yannick SOURIGUES | Alexandre PERU

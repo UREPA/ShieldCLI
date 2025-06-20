@@ -63,5 +63,5 @@ python shieldcli/integrity/file_monitor.py
 - `monitor_config.json`, `permissions_ref.json` : fichiers de config
 - `requirements.txt`, `Dockerfile`, `docker-compose.yml` : à la racine
 
-## Auteur
+## Auteurs
 Groupe 1 - ISRC - Joris BERNARDI | Yannick SOURIGUES | Alexandre PERU

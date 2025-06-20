@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  shieldcli-api:
+    build: .
+    container_name: shieldcli-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./shieldcli:/app/shieldcli
+      - ./reports.db:/app/reports.db
+      - ./requirements.txt:/app/requirements.txt
+    environment:
+      - JWT_SECRET_KEY=#your_secret_key#
+    restart: unless-stopped

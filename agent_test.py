@@ -5,6 +5,9 @@ import uuid
 
 from shieldcli.compliance.compliance_audit import audit_checks
 from shieldcli.integrity.file_monitor import run_integrity_check
+from shieldcli.Discovery.Discovery_tool_nmap import scan_local
+from shieldcli.Discovery.Discovery_tool_scapy import scan_local_scapy
+from shieldcli.logs.script_logs_multiOS_detect import fetch_linux, fetch_windows
 
 AGENT_ID_FILE = "agent_id.txt"
 
@@ -51,7 +54,11 @@ def send_report():
     data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "audit": audit_checks(),
-        "integrity_alerts": run_integrity_check()
+        "integrity_alerts": run_integrity_check(),
+        "scan_nmap": scan_local(),
+        "scan_scapy": scan_local_scapy(),
+        "logs_linux": fetch_linux(),
+        "logs_windows": fetch_windows()
     }
 
     try:

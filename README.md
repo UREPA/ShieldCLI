@@ -1,48 +1,67 @@
 # ShieldCLI
 
-ShieldCLI est un outil de surveillance et d'intégrité pour systèmes, pensé pour la cybersécurité et l'audit.
+ShieldCLI est un outil de surveillance, d'intégrité et d'audit pour systèmes, pensé pour la cybersécurité.
 
-## Fonctionnalités
+## Fonctionnalités principales
 
 ### 1. Surveillance d'intégrité des fichiers (File Integrity Monitoring)
 - Calcule et stocke un checksum de référence pour chaque fichier/dossier surveillé (SHA256).
-- Vérifie périodiquement l'intégrité des fichiers : toute modification ou suppression est détectée et signalée.
+- Vérifie périodiquement l'intégrité des fichiers : toute modification, suppression ou changement de permissions est détecté et signalé.
 - Les chemins à surveiller sont définis dans `monitor_config.json`.
-- La base de référence est réinitialisée à chaque exécution.
+- Les alertes d'intégrité sont envoyées à l'API centrale.
 
-#### Utilisation
-```bash
-# 1. Installer les dépendances
-pip install -r requirements.txt
+### 2. Agent de remontée d'audit et d'intégrité
+- `agent.py` collecte les résultats d'audit (`compliance_audit`) et les alertes d'intégrité, puis les envoie à l'API centrale avec authentification JWT.
+- Les données sont stockées dans une base SQLite via l'API.
 
-# 2. Configurer les chemins à surveiller dans monitor_config.json
+### 3. API centrale (FastAPI)
+- Réceptionne les rapports des agents.
+- Stocke les audits et alertes d'intégrité en base de données.
+- Dashboard pour consulter les rapports par agent.
 
-# 3. Lancer la surveillance
-python file_monitor.py
-```
-
-### 2. Vérification des logs (à venir)
-*Fonctionnalité prévue : analyse et détection d'événements suspects dans les fichiers de logs système ou applicatifs.*
-
-### 3. Vérification de la compliance (ISO, RGPD, etc.) (à venir)
-*Fonctionnalité prévue : contrôle de conformité par rapport à des standards (ISO 27001, RGPD, etc.), génération de rapports d'audit.*
+### 4. Déploiement Docker
+- Un `Dockerfile` et un `docker-compose.yml` sont fournis pour lancer l'API dans un conteneur Docker.
 
 ---
 
-## À venir
-- Ajout de la surveillance des logs
-- Ajout de la vérification de conformité
-- Améliorations de l'interface CLI
+## Installation et utilisation
+
+### 1. Installer les dépendances
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Lancer l'API centrale
+```bash
+# En local
+uvicorn shieldcli.api:app --reload --host 0.0.0.0 --port 8000
+
+# Ou avec Docker Compose
+# (nécessite Docker installé)
+docker compose up --build
+```
+
+### 3. Configurer l'agent
+- Définir les chemins à surveiller dans `monitor_config.json`.
+- Lancer l'agent pour envoyer un rapport :
+```bash
+python agent.py
+```
+
+### 4. Lancer la vérification d'intégrité seule
+```bash
+python shieldcli/integrity/file_monitor.py
+```
+
+---
 
 ## Organisation du projet
-- Pour la vérification d'intégrité, déplacer file_monitor.py dans shieldcli/integrity/
-- Pour lancer le projet :
-  python shieldcli/main.py
-- Pour lancer la vérification d'intégrité seule :
-  python shieldcli/integrity/file_monitor.py
-- Les modules logs/ et compliance/ accueilleront les futures fonctionnalités.
-- Les fichiers de config (monitor_config.json, checksums.json) restent à la racine ou dans un dossier config/ si besoin.
-- requirements.txt et .gitignore restent à la racine.
+- `agent.py` : agent principal, envoie les rapports à l'API
+- `shieldcli/api.py` : API FastAPI centrale
+- `shieldcli/integrity/file_monitor.py` : vérification d'intégrité
+- `shieldcli/compliance/compliance_audit.py` : audit de conformité
+- `monitor_config.json`, `permissions_ref.json` : fichiers de config
+- `requirements.txt`, `Dockerfile`, `docker-compose.yml` : à la racine
 
 ## Auteur
-Projet pédagogique ISRC - Ingénieur systèmes réseau cybersécurité
+Groupe 1 - ISRC 

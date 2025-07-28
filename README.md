@@ -2,7 +2,7 @@
 
 ShieldCLI est un outil de surveillance, d'intégrité et d'audit pour systèmes, pensé pour la cybersécurité.
 
-## Fonctionnalités principales
+## Fonctionnalités principaless
 
 ### 1. Surveillance d'intégrité des fichiers (File Integrity Monitoring)
 - Calcule et stocke un checksum de référence pour chaque fichier/dossier surveillé (SHA256).
